@@ -167,9 +167,8 @@ func TestAddEvent(t *testing.T) {
 	AddEvent(spanCtx, "test-event")
 
 	// Add event with attributes
-	AddEvent(spanCtx, "detailed-event",
-		// Note: EventOption would need to be imported from trace package
-	)
+	AddEvent(spanCtx, "detailed-event") // Note: EventOption would need to be imported from trace package
+
 }
 
 func TestSamplingRatios(t *testing.T) {
@@ -300,8 +299,8 @@ func TestProvider_ConfigValidation(t *testing.T) {
 		{
 			name: "valid config disabled",
 			config: Config{
-				Enabled:       false,
-				ServiceName:   "test-service",
+				Enabled:        false,
+				ServiceName:    "test-service",
 				ServiceVersion: "1.0.0",
 			},
 			wantErr: false,
@@ -309,8 +308,8 @@ func TestProvider_ConfigValidation(t *testing.T) {
 		{
 			name: "empty service name",
 			config: Config{
-				Enabled:       false,
-				ServiceName:   "",
+				Enabled:        false,
+				ServiceName:    "",
 				ServiceVersion: "1.0.0",
 			},
 			wantErr: false, // Should still work with empty name

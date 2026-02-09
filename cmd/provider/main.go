@@ -35,7 +35,9 @@ Supports Kubernetes exec plugin authentication for seamless cluster access.`,
 	cobra.OnInitialize(common.InitViper)
 
 	// Bind persistent flags to viper (global flags available to all subcommands)
-	common.BindPersistentFlags(rootCmd)
+	if err := common.BindPersistentFlags(rootCmd); err != nil {
+		panic(fmt.Sprintf("failed to bind persistent flags: %v", err))
+	}
 
 	rootCmd.AddCommand(version.NewCommand())
 	rootCmd.AddCommand(token.NewCommand(flags))

@@ -128,8 +128,7 @@ func (g *TokenGenerator) createCredential(creds *credentials.AzureCredentials) (
 		creds.ClientID,
 		creds.ClientSecret,
 		&azidentity.ClientSecretCredentialOptions{
-			ClientOptions: policy.ClientOptions{
-			},
+			ClientOptions: policy.ClientOptions{},
 		},
 	)
 	if err != nil {

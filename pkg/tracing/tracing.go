@@ -38,12 +38,12 @@ type Config struct {
 // DefaultConfig returns default tracing configuration
 func DefaultConfig() Config {
 	return Config{
-		Enabled:       false,
-		ServiceName:   "hyperfleet-cloud-provider",
+		Enabled:        false,
+		ServiceName:    "hyperfleet-cloud-provider",
 		ServiceVersion: "dev",
-		Endpoint:      "localhost:4317",
-		Insecure:      true,
-		SamplingRatio: 1.0,
+		Endpoint:       "localhost:4317",
+		Insecure:       true,
+		SamplingRatio:  1.0,
 	}
 }
 

@@ -218,33 +218,33 @@ func TestGetErrorInfo(t *testing.T) {
 
 func TestIsRetryable(t *testing.T) {
 	tests := []struct {
-		name         string
-		code         ErrorCode
+		name          string
+		code          ErrorCode
 		wantRetryable bool
 	}{
 		{
-			name:         "network timeout is retryable",
-			code:         ErrNetworkTimeout,
+			name:          "network timeout is retryable",
+			code:          ErrNetworkTimeout,
 			wantRetryable: true,
 		},
 		{
-			name:         "network unreachable is retryable",
-			code:         ErrNetworkUnreachable,
+			name:          "network unreachable is retryable",
+			code:          ErrNetworkUnreachable,
 			wantRetryable: true,
 		},
 		{
-			name:         "cluster unreachable is retryable",
-			code:         ErrClusterUnreachable,
+			name:          "cluster unreachable is retryable",
+			code:          ErrClusterUnreachable,
 			wantRetryable: true,
 		},
 		{
-			name:         "credential invalid is not retryable",
-			code:         ErrCredentialInvalid,
+			name:          "credential invalid is not retryable",
+			code:          ErrCredentialInvalid,
 			wantRetryable: false,
 		},
 		{
-			name:         "permission denied is not retryable",
-			code:         ErrPermissionDenied,
+			name:          "permission denied is not retryable",
+			code:          ErrPermissionDenied,
 			wantRetryable: false,
 		},
 	}

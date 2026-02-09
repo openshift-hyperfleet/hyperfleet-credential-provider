@@ -51,7 +51,9 @@ Examples:
 	cmd.Flags().StringVar(&flags.TokenDuration, "token-duration", "", "Token duration (e.g., 1h, 30m, 900s) (default: GCP=1h, AWS=15m, Azure=1h)")
 
 	// Bind flags to viper for environment variable support
-	common.BindCommandFlags(cmd)
+	if err := common.BindCommandFlags(cmd); err != nil {
+		panic(fmt.Sprintf("failed to bind flags: %v", err))
+	}
 
 	// Note: We don't use MarkFlagRequired because Cobra validates before Viper bindings take effect
 	// Instead, we validate in the run function after BindFlagsToViper is called
@@ -77,7 +79,7 @@ func run(flags *common.Flags) error {
 	if err != nil {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
-	defer log.Sync()
+	defer func() { _ = log.Sync() }()
 
 	log.Info("Generating kubeconfig",
 		logger.String("provider", flags.ProviderName),

@@ -366,14 +366,6 @@ func TestMetricsExport(t *testing.T) {
 	assert.GreaterOrEqual(t, len(metricNames), 6) // All 6 metric families
 }
 
-func getAllKeys(m map[string]bool) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
 func TestCounterIncrements(t *testing.T) {
 	registry := prometheus.NewRegistry()
 	config := Config{

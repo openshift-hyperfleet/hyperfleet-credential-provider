@@ -313,10 +313,10 @@ func TestToken_Properties(t *testing.T) {
 	now := time.Now()
 
 	tests := []struct {
-		name      string
-		expiresAt time.Time
+		name        string
+		expiresAt   time.Time
 		wantExpired bool
-		expiresIn time.Duration
+		expiresIn   time.Duration
 	}{
 		{
 			name:        "token expires in 15 minutes",

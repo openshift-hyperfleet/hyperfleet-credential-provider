@@ -90,14 +90,14 @@ func (m *MockCredLoader) LoadAzure(ctx context.Context, opts credentials.AzureCr
 // These credentials will NOT work with real Google APIs but are valid in structure
 func CreateValidGCPCredentials() *credentials.GCPCredentials {
 	return &credentials.GCPCredentials{
-		Type:        "service_account",
-		ProjectID:   "test-project-12345",
-		PrivateKeyID: "abcdef1234567890",
-		PrivateKey:  "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7W8jlH1234567\n-----END PRIVATE KEY-----\n",
-		ClientEmail: "test-sa@test-project-12345.iam.gserviceaccount.com",
-		ClientID:    "123456789012345678901",
-		AuthURI:     "https://accounts.google.com/o/oauth2/auth",
-		TokenURI:    "https://oauth2.googleapis.com/token",
+		Type:                    "service_account",
+		ProjectID:               "test-project-12345",
+		PrivateKeyID:            "abcdef1234567890",
+		PrivateKey:              "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7W8jlH1234567\n-----END PRIVATE KEY-----\n",
+		ClientEmail:             "test-sa@test-project-12345.iam.gserviceaccount.com",
+		ClientID:                "123456789012345678901",
+		AuthURI:                 "https://accounts.google.com/o/oauth2/auth",
+		TokenURI:                "https://oauth2.googleapis.com/token",
 		AuthProviderX509CertURL: "https://www.googleapis.com/oauth2/v1/certs",
 		ClientX509CertURL:       "https://www.googleapis.com/robot/v1/metadata/x509/test-sa%40test-project-12345.iam.gserviceaccount.com",
 	}

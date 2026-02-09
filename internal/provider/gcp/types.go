@@ -6,10 +6,10 @@ import (
 
 // Config holds GCP provider configuration
 type Config struct {
-	ProjectID         string
-	CredentialsFile   string
-	TokenDuration     time.Duration
-	Scopes            []string
+	ProjectID       string
+	CredentialsFile string
+	TokenDuration   time.Duration
+	Scopes          []string
 }
 
 // DefaultScopes returns the default OAuth scopes for GKE access

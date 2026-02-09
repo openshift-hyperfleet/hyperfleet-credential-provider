@@ -7,9 +7,9 @@ import (
 
 // MockProvider is a mock implementation of Provider for testing
 type MockProvider struct {
-	NameValue                string
-	GetTokenFunc             func(ctx context.Context, opts GetTokenOptions) (*Token, error)
-	ValidateCredentialsFunc  func(ctx context.Context) error
+	NameValue               string
+	GetTokenFunc            func(ctx context.Context, opts GetTokenOptions) (*Token, error)
+	ValidateCredentialsFunc func(ctx context.Context) error
 }
 
 // GetToken implements Provider

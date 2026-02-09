@@ -50,7 +50,9 @@ Examples:
 	cmd.Flags().StringVar(&flags.TenantID, "tenant-id", "", "Azure tenant ID (required for Azure)")
 
 	// Bind flags to viper for environment variable support
-	common.BindCommandFlags(cmd)
+	if err := common.BindCommandFlags(cmd); err != nil {
+		panic(fmt.Sprintf("failed to bind flags: %v", err))
+	}
 
 	// Note: We don't use MarkFlagRequired because Cobra validates before Viper bindings take effect
 	// Instead, we validate in the RunE function after BindFlagsToViper is called
@@ -76,7 +78,7 @@ func run(flags *common.Flags) error {
 	if err != nil {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
-	defer log.Sync()
+	defer func() { _ = log.Sync() }()
 
 	log.Info("Starting token generation",
 		logger.String("provider", flags.ProviderName),
