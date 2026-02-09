@@ -14,11 +14,11 @@ const (
 	ErrUnauthenticated  ErrorCode = "ERR_UNAUTHENTICATED"
 
 	// Credential errors
-	ErrCredentialNotFound      ErrorCode = "ERR_CREDENTIAL_NOT_FOUND"
-	ErrCredentialInvalid       ErrorCode = "ERR_CREDENTIAL_INVALID"
-	ErrCredentialMalformed     ErrorCode = "ERR_CREDENTIAL_MALFORMED"
-	ErrCredentialExpired       ErrorCode = "ERR_CREDENTIAL_EXPIRED"
-	ErrCredentialLoadFailed    ErrorCode = "ERR_CREDENTIAL_LOAD_FAILED"
+	ErrCredentialNotFound         ErrorCode = "ERR_CREDENTIAL_NOT_FOUND"
+	ErrCredentialInvalid          ErrorCode = "ERR_CREDENTIAL_INVALID"
+	ErrCredentialMalformed        ErrorCode = "ERR_CREDENTIAL_MALFORMED"
+	ErrCredentialExpired          ErrorCode = "ERR_CREDENTIAL_EXPIRED"
+	ErrCredentialLoadFailed       ErrorCode = "ERR_CREDENTIAL_LOAD_FAILED"
 	ErrCredentialValidationFailed ErrorCode = "ERR_CREDENTIAL_VALIDATION_FAILED"
 
 	// Token generation errors
@@ -53,7 +53,7 @@ const (
 	ErrMissingRequired  ErrorCode = "ERR_MISSING_REQUIRED"
 
 	// Exec plugin errors
-	ErrExecPluginFailed       ErrorCode = "ERR_EXEC_PLUGIN_FAILED"
+	ErrExecPluginFailed        ErrorCode = "ERR_EXEC_PLUGIN_FAILED"
 	ErrExecPluginInvalidOutput ErrorCode = "ERR_EXEC_PLUGIN_INVALID_OUTPUT"
 )
 

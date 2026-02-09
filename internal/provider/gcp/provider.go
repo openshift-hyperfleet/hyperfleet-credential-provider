@@ -9,7 +9,7 @@ import (
 	"github.com/openshift-hyperfleet/hyperfleet-credential-provider/pkg/logger"
 )
 
-type Provider struct{
+type Provider struct {
 	config         *Config
 	logger         logger.Logger
 	tokenGenerator *TokenGenerator

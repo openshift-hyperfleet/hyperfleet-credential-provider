@@ -1,5 +1,7 @@
 .DEFAULT_GOAL := help
 
+include .bingo/Variables.mk
+
 CGO_ENABLED ?= 0
 GO ?= go
 
@@ -63,10 +65,9 @@ coverage: test
 	@echo "Coverage report: coverage.html"
 .PHONY: coverage
 
-lint:
+lint: $(GOLANGCI_LINT)
 	@echo "Running golangci-lint..."
-	@which golangci-lint > /dev/null || (echo "golangci-lint not found. Install from https://golangci-lint.run/usage/install/" && exit 1)
-	golangci-lint run --config .golangci.yml
+	$(GOLANGCI_LINT) run
 .PHONY: lint
 
 fmt:

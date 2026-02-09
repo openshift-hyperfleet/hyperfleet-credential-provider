@@ -48,8 +48,8 @@ func InitViper() {
 }
 
 // BindPersistentFlags binds persistent flags from root command to Viper
-func BindPersistentFlags(cmd *cobra.Command) {
-	viper.BindPFlags(cmd.PersistentFlags())
+func BindPersistentFlags(cmd *cobra.Command) error {
+	return viper.BindPFlags(cmd.PersistentFlags())
 }
 
 // BindCommandFlags binds command-specific flags to Viper

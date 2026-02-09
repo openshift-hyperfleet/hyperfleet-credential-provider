@@ -10,9 +10,9 @@ import (
 // Metrics holds all Prometheus metrics for the cloud provider
 type Metrics struct {
 	// Token generation metrics
-	TokenRequestsTotal       *prometheus.CounterVec
-	TokenGenerationDuration  *prometheus.HistogramVec
-	TokenGenerationErrors    *prometheus.CounterVec
+	TokenRequestsTotal      *prometheus.CounterVec
+	TokenGenerationDuration *prometheus.HistogramVec
+	TokenGenerationErrors   *prometheus.CounterVec
 
 	// Credential validation metrics
 	CredentialValidationErrors *prometheus.CounterVec

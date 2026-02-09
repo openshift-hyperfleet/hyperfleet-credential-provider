@@ -193,12 +193,12 @@ func (g *TokenGenerator) encodeToken(clusterName string, presignedURL string) (s
 
 	// The payload contains the HTTP method, URL, headers, and body
 	payload := &stsPresignedURLPayload{
-		URL:        presignedURL,
-		Method:     http.MethodPost,
+		URL:         presignedURL,
+		Method:      http.MethodPost,
 		ClusterName: clusterName,
 		Headers: map[string][]string{
 			clusterIDHeader: {clusterName},
-			"Host":         {parsedURL.Host},
+			"Host":          {parsedURL.Host},
 		},
 	}
 
