@@ -1,0 +1,119 @@
+package token
+
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"github.com/openshift-hyperfleet/hyperfleet-credential-provider/cmd/provider/common"
+	"github.com/openshift-hyperfleet/hyperfleet-credential-provider/internal/execplugin"
+	"github.com/openshift-hyperfleet/hyperfleet-credential-provider/internal/provider"
+	"github.com/openshift-hyperfleet/hyperfleet-credential-provider/pkg/logger"
+)
+
+func NewCommand(flags *common.Flags) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-token",
+		Short: "Generate a Kubernetes authentication token",
+		Long: `Generate a short-lived authentication token for a Kubernetes cluster.
+
+Outputs an ExecCredential JSON structure compatible with Kubernetes exec plugin.
+
+Examples:
+  # GCP/GKE
+  hyperfleet-credential-provider get-token --provider=gcp --cluster-name=my-cluster --project-id=my-project
+
+  # AWS/EKS
+  hyperfleet-credential-provider get-token --provider=aws --cluster-name=my-cluster --region=us-east-1
+
+  # Azure/AKS
+  hyperfleet-credential-provider get-token --provider=azure --cluster-name=my-cluster --tenant-id=... --subscription-id=...
+`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			// Bind Viper values to flags before validation
+			common.BindFlagsToViper(flags)
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return run(flags)
+		},
+	}
+
+	cmd.Flags().StringVar(&flags.ProviderName, "provider", "", "Cloud provider (gcp, aws, azure) [required]")
+	cmd.Flags().StringVar(&flags.ClusterName, "cluster-name", "", "Cluster name [required]")
+	cmd.Flags().StringVar(&flags.Region, "region", "", "Cloud region (optional for GCP, required for AWS, optional for Azure)")
+	cmd.Flags().StringVar(&flags.ProjectID, "project-id", "", "GCP project ID (required for GCP)")
+	cmd.Flags().StringVar(&flags.AccountID, "account-id", "", "AWS account ID (optional)")
+	cmd.Flags().StringVar(&flags.SubscriptionID, "subscription-id", "", "Azure subscription ID (required for Azure)")
+	cmd.Flags().StringVar(&flags.TenantID, "tenant-id", "", "Azure tenant ID (required for Azure)")
+
+	// Bind flags to viper for environment variable support
+	common.BindCommandFlags(cmd)
+
+	// Note: We don't use MarkFlagRequired because Cobra validates before Viper bindings take effect
+	// Instead, we validate in the RunE function after BindFlagsToViper is called
+
+	return cmd
+}
+
+func run(flags *common.Flags) error {
+	// Bind Viper values to flags (environment variables take precedence if flags not set)
+	common.BindFlagsToViper(flags)
+
+	if flags.ProviderName == "" {
+		return fmt.Errorf("--provider is required (or set HFCP_PROVIDER)")
+	}
+	if flags.ClusterName == "" {
+		return fmt.Errorf("--cluster-name is required (or set HFCP_CLUSTER_NAME)")
+	}
+
+	ctx, cancel := common.SetupSignalHandler()
+	defer cancel()
+
+	log, err := common.CreateLogger(flags)
+	if err != nil {
+		return fmt.Errorf("failed to create logger: %w", err)
+	}
+	defer log.Sync()
+
+	log.Info("Starting token generation",
+		logger.String("provider", flags.ProviderName),
+		logger.String("cluster", flags.ClusterName),
+	)
+
+	prov, err := common.CreateProvider(flags, log)
+	if err != nil {
+		log.Error("Failed to create provider", logger.String("error", err.Error()))
+		return err
+	}
+
+	opts := provider.GetTokenOptions{
+		ClusterName:    flags.ClusterName,
+		Region:         flags.Region,
+		ProjectID:      flags.ProjectID,
+		AccountID:      flags.AccountID,
+		SubscriptionID: flags.SubscriptionID,
+		TenantID:       flags.TenantID,
+	}
+
+	token, err := prov.GetToken(ctx, opts)
+	if err != nil {
+		log.Error("Failed to generate token", logger.String("error", err.Error()))
+		return err
+	}
+
+	log.Info("Token generated successfully",
+		logger.String("provider", flags.ProviderName),
+		logger.String("expires_at", token.ExpiresAt.Format(time.RFC3339)),
+	)
+
+	writer := execplugin.NewOutputWriter(os.Stdout)
+	if err := writer.WriteToken(token); err != nil {
+		log.Error("Failed to write token output", logger.String("error", err.Error()))
+		return err
+	}
+
+	return nil
+}
