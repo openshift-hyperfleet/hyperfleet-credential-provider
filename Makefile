@@ -2,6 +2,9 @@
 
 include .bingo/Variables.mk
 
+# Set HOME to current directory if not set (for CI environments)
+export HOME ?= $(shell pwd)
+
 CGO_ENABLED ?= 0
 GO ?= go
 
@@ -67,7 +70,7 @@ coverage: test
 
 lint: $(GOLANGCI_LINT)
 	@echo "Running golangci-lint..."
-	$(GOLANGCI_LINT) run
+	GOLANGCI_LINT_CACHE=$${HOME}/.cache/golangci-lint GOCACHE=$${HOME}/.cache/go-build GOMODCACHE=$${HOME}/go/pkg/mod $(GOLANGCI_LINT) run
 .PHONY: lint
 
 fmt:
