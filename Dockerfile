@@ -23,7 +23,7 @@ COPY --from=builder /build/bin/hyperfleet-credential-provider /app/hyperfleet-cr
 COPY --from=builder /build/examples/kubeconfig /app/examples/kubeconfig
 
 # Create non-root user for running the application (OpenShift best practice)
-RUN microdnf install -y shadow-utils && \
+RUN microdnf install -y shadow-utils jq && \
     useradd -r -u 1001 -g root hyperfleet && \
     chown -R 1001:0 /app && \
     chmod -R g=u /app && \
