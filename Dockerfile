@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=gcr.io/distroless/static-debian12:nonroot
+ARG BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 FROM golang:1.24 AS builder
 
@@ -21,6 +21,15 @@ WORKDIR /app
 COPY --from=builder /build/bin/hyperfleet-credential-provider /app/hyperfleet-credential-provider
 
 COPY --from=builder /build/examples/kubeconfig /app/examples/kubeconfig
+
+# Create non-root user for running the application (OpenShift best practice)
+RUN microdnf install -y shadow-utils && \
+    useradd -r -u 1001 -g root hyperfleet && \
+    chown -R 1001:0 /app && \
+    chmod -R g=u /app && \
+    microdnf clean all
+
+USER 1001
 
 ENTRYPOINT ["/app/hyperfleet-credential-provider"]
 CMD ["--help"]
