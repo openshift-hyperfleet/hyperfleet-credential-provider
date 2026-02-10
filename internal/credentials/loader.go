@@ -94,7 +94,11 @@ func (l *DefaultLoader) LoadAWS(ctx context.Context, opts AWSCredentialOptions) 
 
 	credentialsFile := opts.CredentialsFile
 	if credentialsFile == "" {
-		credentialsFile = os.Getenv("AWS_CREDENTIALS_FILE")
+		// Priority: AWS_SHARED_CREDENTIALS_FILE (standard) > AWS_CREDENTIALS_FILE (legacy)
+		credentialsFile = os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
+		if credentialsFile == "" {
+			credentialsFile = os.Getenv("AWS_CREDENTIALS_FILE")
+		}
 	}
 
 	// If credentials file is specified, load from file

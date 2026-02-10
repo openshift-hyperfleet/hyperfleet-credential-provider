@@ -158,13 +158,24 @@ func getGCPClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, lo
 	}
 
 	endpoint := "https://" + info.Endpoint
+
+	// Determine credentials file path
+	// Priority: --credentials-file flag > GOOGLE_APPLICATION_CREDENTIALS env var
+	credsPath := flags.CredentialsFile
+	if credsPath == "" {
+		credsPath = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	}
+	if credsPath == "" {
+		return "", "", "", nil, fmt.Errorf("gcp credentials file not specified: use --credentials-file flag or set GOOGLE_APPLICATION_CREDENTIALS environment variable")
+	}
+
 	providerInfo := map[string]string{
 		"provider":     "gcp",
 		"cluster-name": flags.ClusterName,
 		"project-id":   flags.ProjectID,
 		"region":       flags.Region,
 		"creds-env":    "GOOGLE_APPLICATION_CREDENTIALS",
-		"creds-path":   common.GetCredentialsPath(flags),
+		"creds-path":   credsPath,
 	}
 
 	return endpoint, info.CertificateAuthority, info.Version, providerInfo, nil
@@ -195,12 +206,30 @@ func getAWSClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, lo
 		return "", "", "", nil, fmt.Errorf("failed to get cluster info: %w", err)
 	}
 
+	// Determine credentials file path
+	// Priority: --credentials-file flag > AWS_SHARED_CREDENTIALS_FILE > AWS_CREDENTIALS_FILE
+	var credsPath string
+	var credsEnvName string
+
+	if flags.CredentialsFile != "" {
+		credsPath = flags.CredentialsFile
+		credsEnvName = "AWS_SHARED_CREDENTIALS_FILE" //nolint:gosec // Environment variable name, not credentials
+	} else if envPath := os.Getenv("AWS_SHARED_CREDENTIALS_FILE"); envPath != "" {
+		credsPath = envPath
+		credsEnvName = "AWS_SHARED_CREDENTIALS_FILE" //nolint:gosec // Environment variable name, not credentials
+	} else if envPath := os.Getenv("AWS_CREDENTIALS_FILE"); envPath != "" {
+		credsPath = envPath
+		credsEnvName = "AWS_CREDENTIALS_FILE"
+	} else {
+		return "", "", "", nil, fmt.Errorf("aws credentials file not specified: use --credentials-file flag or set AWS_SHARED_CREDENTIALS_FILE or AWS_CREDENTIALS_FILE environment variable")
+	}
+
 	providerInfo := map[string]string{
 		"provider":     "aws",
 		"cluster-name": flags.ClusterName,
 		"region":       flags.Region,
-		"creds-env":    "AWS_CREDENTIALS_FILE",
-		"creds-path":   common.GetCredentialsPath(flags),
+		"creds-env":    credsEnvName,
+		"creds-path":   credsPath,
 	}
 
 	return info.Endpoint, info.CertificateAuthority, info.Version, providerInfo, nil
@@ -238,6 +267,16 @@ func getAzureClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, 
 		return "", "", "", nil, fmt.Errorf("failed to get cluster info: %w", err)
 	}
 
+	// Determine credentials file path
+	// Priority: --credentials-file flag > AZURE_CREDENTIALS_FILE env var
+	credsPath := flags.CredentialsFile
+	if credsPath == "" {
+		credsPath = os.Getenv("AZURE_CREDENTIALS_FILE")
+	}
+	if credsPath == "" {
+		return "", "", "", nil, fmt.Errorf("azure credentials file not specified: use --credentials-file flag or set AZURE_CREDENTIALS_FILE environment variable")
+	}
+
 	providerInfo := map[string]string{
 		"provider":        "azure",
 		"cluster-name":    flags.ClusterName,
@@ -245,7 +284,7 @@ func getAzureClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, 
 		"tenant-id":       flags.TenantID,
 		"resource-group":  flags.ResourceGroup,
 		"creds-env":       "AZURE_CREDENTIALS_FILE",
-		"creds-path":      common.GetCredentialsPath(flags),
+		"creds-path":      credsPath,
 	}
 
 	return info.Endpoint, info.CertificateAuthority, info.Version, providerInfo, nil
@@ -269,6 +308,20 @@ func generateKubeconfigYAML(endpoint, caCert string, providerInfo map[string]str
 		execArgs = append(execArgs, "--tenant-id="+providerInfo["tenant-id"])
 	}
 
+	// Build exec configuration with credentials environment variable
+	execConfig := map[string]interface{}{
+		"apiVersion": "client.authentication.k8s.io/v1",
+		"command":    "hyperfleet-credential-provider",
+		"args":       execArgs,
+		"env": []map[string]string{
+			{
+				"name":  providerInfo["creds-env"],
+				"value": providerInfo["creds-path"],
+			},
+		},
+		"interactiveMode": "Never",
+	}
+
 	kubeconfig := map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Config",
@@ -285,18 +338,7 @@ func generateKubeconfigYAML(endpoint, caCert string, providerInfo map[string]str
 			{
 				"name": userName,
 				"user": map[string]interface{}{
-					"exec": map[string]interface{}{
-						"apiVersion": "client.authentication.k8s.io/v1",
-						"command":    "hyperfleet-credential-provider",
-						"args":       execArgs,
-						"env": []map[string]string{
-							{
-								"name":  providerInfo["creds-env"],
-								"value": providerInfo["creds-path"],
-							},
-						},
-						"interactiveMode": "Never",
-					},
+					"exec": execConfig,
 				},
 			},
 		},

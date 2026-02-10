@@ -2,9 +2,6 @@
 
 include .bingo/Variables.mk
 
-# Set HOME to current directory if not set (for CI environments)
-export HOME ?= $(shell pwd)
-
 CGO_ENABLED ?= 0
 GO ?= go
 
