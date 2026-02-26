@@ -35,7 +35,7 @@ Examples:
     --region=us-central1 \
     --output=kubeconfig.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(flags)
+			return run(cmd, flags)
 		},
 	}
 
@@ -61,9 +61,9 @@ Examples:
 	return cmd
 }
 
-func run(flags *common.Flags) error {
-	// Bind Viper values to flags (environment variables take precedence if flags not set)
-	common.BindFlagsToViper(flags)
+func run(cmd *cobra.Command, flags *common.Flags) error {
+	// Bind Viper values to flags (flags take precedence over environment variables)
+	common.BindFlagsToViper(cmd, flags)
 
 	if flags.ProviderName == "" {
 		return fmt.Errorf("--provider is required (or set HFCP_PROVIDER)")
@@ -160,13 +160,13 @@ func getGCPClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, lo
 	endpoint := "https://" + info.Endpoint
 
 	// Determine credentials file path
-	// Priority: --credentials-file flag > GOOGLE_APPLICATION_CREDENTIALS env var
+	// Priority: --credentials-file flag > HFCP_CREDENTIALS_FILE > GOOGLE_APPLICATION_CREDENTIALS
 	credsPath := flags.CredentialsFile
 	if credsPath == "" {
 		credsPath = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	}
 	if credsPath == "" {
-		return "", "", "", nil, fmt.Errorf("gcp credentials file not specified: use --credentials-file flag or set GOOGLE_APPLICATION_CREDENTIALS environment variable")
+		return "", "", "", nil, fmt.Errorf("gcp credentials file not specified: use --credentials-file flag, or set HFCP_CREDENTIALS_FILE or GOOGLE_APPLICATION_CREDENTIALS environment variable")
 	}
 
 	providerInfo := map[string]string{
@@ -207,7 +207,7 @@ func getAWSClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, lo
 	}
 
 	// Determine credentials file path
-	// Priority: --credentials-file flag > AWS_SHARED_CREDENTIALS_FILE > AWS_CREDENTIALS_FILE
+	// Priority: --credentials-file flag > HFCP_CREDENTIALS_FILE > AWS_SHARED_CREDENTIALS_FILE > AWS_CREDENTIALS_FILE
 	var credsPath string
 	var credsEnvName string
 
@@ -221,7 +221,7 @@ func getAWSClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, lo
 		credsPath = envPath
 		credsEnvName = "AWS_CREDENTIALS_FILE"
 	} else {
-		return "", "", "", nil, fmt.Errorf("aws credentials file not specified: use --credentials-file flag or set AWS_SHARED_CREDENTIALS_FILE or AWS_CREDENTIALS_FILE environment variable")
+		return "", "", "", nil, fmt.Errorf("aws credentials file not specified: use --credentials-file flag, or set HFCP_CREDENTIALS_FILE, AWS_SHARED_CREDENTIALS_FILE or AWS_CREDENTIALS_FILE environment variable")
 	}
 
 	providerInfo := map[string]string{
@@ -268,13 +268,13 @@ func getAzureClusterInfoForKubeconfig(ctx context.Context, flags *common.Flags, 
 	}
 
 	// Determine credentials file path
-	// Priority: --credentials-file flag > AZURE_CREDENTIALS_FILE env var
+	// Priority: --credentials-file flag > HFCP_CREDENTIALS_FILE > AZURE_CREDENTIALS_FILE
 	credsPath := flags.CredentialsFile
 	if credsPath == "" {
 		credsPath = os.Getenv("AZURE_CREDENTIALS_FILE")
 	}
 	if credsPath == "" {
-		return "", "", "", nil, fmt.Errorf("azure credentials file not specified: use --credentials-file flag or set AZURE_CREDENTIALS_FILE environment variable")
+		return "", "", "", nil, fmt.Errorf("azure credentials file not specified: use --credentials-file flag, or set HFCP_CREDENTIALS_FILE or AZURE_CREDENTIALS_FILE environment variable")
 	}
 
 	providerInfo := map[string]string{

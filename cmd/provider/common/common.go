@@ -60,53 +60,61 @@ func BindCommandFlags(cmd *cobra.Command) error {
 
 // BindFlagsToViper binds command flags to Viper values
 // This ensures environment variables are read if flags are not provided
-func BindFlagsToViper(flags *Flags) {
+// Priority: command-line flags > environment variables > defaults
+func BindFlagsToViper(cmd *cobra.Command, flags *Flags) {
 	// Global flags - read from viper if not explicitly set via command line
-	if !isFlagSetExplicitly("log-level") {
+	if !isFlagSetExplicitly(cmd, "log-level") {
 		flags.LogLevel = viper.GetString("log-level")
 	}
-	if !isFlagSetExplicitly("log-format") {
+	if !isFlagSetExplicitly(cmd, "log-format") {
 		flags.LogFormat = viper.GetString("log-format")
 	}
-	if !isFlagSetExplicitly("credentials-file") {
+	if !isFlagSetExplicitly(cmd, "credentials-file") {
 		flags.CredentialsFile = viper.GetString("credentials-file")
 	}
 
 	// Provider flags
-	if !isFlagSetExplicitly("provider") {
+	if !isFlagSetExplicitly(cmd, "provider") {
 		flags.ProviderName = viper.GetString("provider")
 	}
-	if !isFlagSetExplicitly("cluster-name") {
+	if !isFlagSetExplicitly(cmd, "cluster-name") {
 		flags.ClusterName = viper.GetString("cluster-name")
 	}
-	if !isFlagSetExplicitly("region") {
+	if !isFlagSetExplicitly(cmd, "region") {
 		flags.Region = viper.GetString("region")
 	}
-	if !isFlagSetExplicitly("project-id") {
+	if !isFlagSetExplicitly(cmd, "project-id") {
 		flags.ProjectID = viper.GetString("project-id")
 	}
-	if !isFlagSetExplicitly("account-id") {
+	if !isFlagSetExplicitly(cmd, "account-id") {
 		flags.AccountID = viper.GetString("account-id")
 	}
-	if !isFlagSetExplicitly("subscription-id") {
+	if !isFlagSetExplicitly(cmd, "subscription-id") {
 		flags.SubscriptionID = viper.GetString("subscription-id")
 	}
-	if !isFlagSetExplicitly("tenant-id") {
+	if !isFlagSetExplicitly(cmd, "tenant-id") {
 		flags.TenantID = viper.GetString("tenant-id")
 	}
-	if !isFlagSetExplicitly("resource-group") {
+	if !isFlagSetExplicitly(cmd, "resource-group") {
 		flags.ResourceGroup = viper.GetString("resource-group")
 	}
-	if !isFlagSetExplicitly("token-duration") {
+	if !isFlagSetExplicitly(cmd, "token-duration") {
 		flags.TokenDuration = viper.GetString("token-duration")
 	}
 }
 
 // isFlagSetExplicitly checks if a flag was set explicitly on the command line
-// If viper.IsSet returns true but the value equals the default, it was from env/config
-func isFlagSetExplicitly(flagName string) bool {
-	// This is a simplification - in practice we'd check the cobra command's flags
-	// For now, we always prefer viper values (env vars take precedence)
+// Returns true if the flag was changed from its default value via command line argument
+func isFlagSetExplicitly(cmd *cobra.Command, flagName string) bool {
+	// Check both local flags and persistent flags
+	if flag := cmd.Flags().Lookup(flagName); flag != nil && flag.Changed {
+		return true
+	}
+	if cmd.HasParent() {
+		if flag := cmd.Parent().PersistentFlags().Lookup(flagName); flag != nil && flag.Changed {
+			return true
+		}
+	}
 	return false
 }
 

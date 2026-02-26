@@ -53,7 +53,7 @@ Examples:
     "version": "v1.33.5-gke.2118001"
   }`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(flags)
+			return run(cmd, flags)
 		},
 	}
 
@@ -77,9 +77,9 @@ Examples:
 	return cmd
 }
 
-func run(flags *common.Flags) error {
-	// Bind Viper values to flags (environment variables take precedence if flags not set)
-	common.BindFlagsToViper(flags)
+func run(cmd *cobra.Command, flags *common.Flags) error {
+	// Bind Viper values to flags (flags take precedence over environment variables)
+	common.BindFlagsToViper(cmd, flags)
 
 	if flags.ProviderName == "" {
 		return fmt.Errorf("--provider is required (or set HFCP_PROVIDER)")

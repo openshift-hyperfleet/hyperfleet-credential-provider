@@ -10,7 +10,43 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// clearHFCPEnvVars saves and clears all HFCP_* environment variables
+func clearHFCPEnvVars() map[string]string {
+	savedEnvVars := map[string]string{}
+	envVarsToClear := []string{
+		"HFCP_LOG_LEVEL",
+		"HFCP_LOG_FORMAT",
+		"HFCP_CREDENTIALS_FILE",
+		"HFCP_PROVIDER",
+		"HFCP_CLUSTER_NAME",
+		"HFCP_REGION",
+		"HFCP_PROJECT_ID",
+		"HFCP_ACCOUNT_ID",
+		"HFCP_SUBSCRIPTION_ID",
+		"HFCP_TENANT_ID",
+		"HFCP_RESOURCE_GROUP",
+		"HFCP_TOKEN_DURATION",
+	}
+	for _, key := range envVarsToClear {
+		if val, exists := os.LookupEnv(key); exists {
+			savedEnvVars[key] = val
+			os.Unsetenv(key)
+		}
+	}
+	return savedEnvVars
+}
+
+// restoreEnvVars restores previously saved environment variables
+func restoreEnvVars(savedEnvVars map[string]string) {
+	for key, val := range savedEnvVars {
+		os.Setenv(key, val)
+	}
+}
+
 func TestInitViper(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	// Reset viper before each test
 	viper.Reset()
 
@@ -26,6 +62,10 @@ func TestInitViper(t *testing.T) {
 }
 
 func TestBindFlagsToViper_GlobalFlags(t *testing.T) {
+	// Save and clear any existing HFCP_* environment variables
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -103,9 +143,15 @@ func TestBindFlagsToViper_GlobalFlags(t *testing.T) {
 			viper.Reset()
 			InitViper()
 
+			// Create a test command
+			cmd := &cobra.Command{Use: "test"}
+			cmd.Flags().String("log-level", "", "log level")
+			cmd.Flags().String("log-format", "", "log format")
+			cmd.Flags().String("credentials-file", "", "credentials file")
+
 			// Apply bindings
 			flags := tt.initial
-			BindFlagsToViper(flags)
+			BindFlagsToViper(cmd, flags)
 
 			// Verify
 			assert.Equal(t, tt.expected.LogLevel, flags.LogLevel)
@@ -116,6 +162,10 @@ func TestBindFlagsToViper_GlobalFlags(t *testing.T) {
 }
 
 func TestBindFlagsToViper_ProviderFlags(t *testing.T) {
+	// Save and clear any existing HFCP_* environment variables
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -179,9 +229,16 @@ func TestBindFlagsToViper_ProviderFlags(t *testing.T) {
 			viper.Reset()
 			InitViper()
 
+			// Create a test command
+			cmd := &cobra.Command{Use: "test"}
+			cmd.Flags().String("provider", "", "provider")
+			cmd.Flags().String("cluster-name", "", "cluster name")
+			cmd.Flags().String("region", "", "region")
+			cmd.Flags().String("project-id", "", "project ID")
+
 			// Apply bindings
 			flags := tt.initial
-			BindFlagsToViper(flags)
+			BindFlagsToViper(cmd, flags)
 
 			// Verify
 			assert.Equal(t, tt.expected.ProviderName, flags.ProviderName)
@@ -193,6 +250,9 @@ func TestBindFlagsToViper_ProviderFlags(t *testing.T) {
 }
 
 func TestBindFlagsToViper_AWSFlags(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -202,13 +262,20 @@ func TestBindFlagsToViper_AWSFlags(t *testing.T) {
 	viper.Reset()
 	InitViper()
 
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("account-id", "", "account ID")
+
 	flags := &Flags{}
-	BindFlagsToViper(flags)
+	BindFlagsToViper(cmd, flags)
 
 	assert.Equal(t, "123456789012", flags.AccountID)
 }
 
 func TestBindFlagsToViper_AzureFlags(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -226,8 +293,14 @@ func TestBindFlagsToViper_AzureFlags(t *testing.T) {
 	viper.Reset()
 	InitViper()
 
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("subscription-id", "", "subscription ID")
+	cmd.Flags().String("tenant-id", "", "tenant ID")
+	cmd.Flags().String("resource-group", "", "resource group")
+
 	flags := &Flags{}
-	BindFlagsToViper(flags)
+	BindFlagsToViper(cmd, flags)
 
 	assert.Equal(t, "sub-123", flags.SubscriptionID)
 	assert.Equal(t, "tenant-456", flags.TenantID)
@@ -235,8 +308,17 @@ func TestBindFlagsToViper_AzureFlags(t *testing.T) {
 }
 
 func TestBindFlagsToViper_NoEnvVars(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
+
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("log-level", "", "log level")
+	cmd.Flags().String("log-format", "", "log format")
+	cmd.Flags().String("provider", "", "provider")
 
 	// No environment variables set
 	flags := &Flags{
@@ -245,17 +327,19 @@ func TestBindFlagsToViper_NoEnvVars(t *testing.T) {
 		ProviderName: "",
 	}
 
-	BindFlagsToViper(flags)
+	BindFlagsToViper(cmd, flags)
 
-	// When no env vars are set, viper returns empty strings
-	// Since isFlagSetExplicitly always returns false, flags get overwritten with empty values
-	// This is current behavior - empty env var values override defaults
+	// When no env vars are set and no flags are set, viper returns empty strings
+	// Since flags are not set explicitly, env var values are used (which are empty)
 	assert.Equal(t, "", flags.LogLevel, "Viper returns empty string when no env var set")
 	assert.Equal(t, "", flags.LogFormat, "Viper returns empty string when no env var set")
 	assert.Equal(t, "", flags.ProviderName)
 }
 
 func TestBindFlagsToViper_TokenDuration(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -265,13 +349,20 @@ func TestBindFlagsToViper_TokenDuration(t *testing.T) {
 	viper.Reset()
 	InitViper()
 
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("token-duration", "", "token duration")
+
 	flags := &Flags{}
-	BindFlagsToViper(flags)
+	BindFlagsToViper(cmd, flags)
 
 	assert.Equal(t, "2h", flags.TokenDuration)
 }
 
 func TestBindCommandFlags(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -297,6 +388,9 @@ func TestBindCommandFlags(t *testing.T) {
 }
 
 func TestBindPersistentFlags(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -322,6 +416,9 @@ func TestBindPersistentFlags(t *testing.T) {
 
 func TestBindFlagsToViper_UnderscoreReplacement(t *testing.T) {
 	// Test that hyphens in flag names are converted to underscores in env vars
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -338,6 +435,9 @@ func TestBindFlagsToViper_UnderscoreReplacement(t *testing.T) {
 }
 
 func TestBindFlagsToViper_EmptyEnvVar(t *testing.T) {
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
 	viper.Reset()
 	InitViper()
 
@@ -348,14 +448,139 @@ func TestBindFlagsToViper_EmptyEnvVar(t *testing.T) {
 	viper.Reset()
 	InitViper()
 
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("provider", "", "provider")
+
 	flags := &Flags{
 		ProviderName: "default-provider",
 	}
 
-	BindFlagsToViper(flags)
+	BindFlagsToViper(cmd, flags)
 
-	// Empty env var should not override default
+	// Empty env var should not override default when flag is not set
 	// Note: This depends on implementation - empty string is still a valid value
 	value := viper.GetString("provider")
 	assert.Equal(t, "", value, "Empty env var is a valid value")
+}
+
+func TestBindFlagsToViper_FlagTakesPrecedence(t *testing.T) {
+	// Test that explicitly set flags take precedence over environment variables
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
+	viper.Reset()
+	InitViper()
+
+	// Set environment variable
+	os.Setenv("HFCP_PROVIDER", "from-env")
+	os.Setenv("HFCP_CREDENTIALS_FILE", "/env/path/creds.json")
+	defer os.Unsetenv("HFCP_PROVIDER")
+	defer os.Unsetenv("HFCP_CREDENTIALS_FILE")
+
+	viper.Reset()
+	InitViper()
+
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("provider", "", "provider")
+	cmd.Flags().String("credentials-file", "", "credentials file")
+
+	// Simulate user setting flags
+	err := cmd.Flags().Set("provider", "from-flag")
+	require.NoError(t, err)
+	err = cmd.Flags().Set("credentials-file", "/flag/path/creds.json")
+	require.NoError(t, err)
+
+	// Bind flags to viper
+	err = BindCommandFlags(cmd)
+	require.NoError(t, err)
+
+	flags := &Flags{
+		ProviderName:    "from-flag",             // Set by flag
+		CredentialsFile: "/flag/path/creds.json", // Set by flag
+	}
+
+	BindFlagsToViper(cmd, flags)
+
+	// Flags should take precedence over environment variables
+	assert.Equal(t, "from-flag", flags.ProviderName, "Flag should take precedence over env var")
+	assert.Equal(t, "/flag/path/creds.json", flags.CredentialsFile, "Flag should take precedence over env var")
+}
+
+func TestBindFlagsToViper_EnvVarUsedWhenFlagNotSet(t *testing.T) {
+	// Test that environment variables are used when flags are not set
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
+	viper.Reset()
+	InitViper()
+
+	// Set environment variable
+	os.Setenv("HFCP_PROVIDER", "from-env")
+	os.Setenv("HFCP_REGION", "us-west1")
+	defer os.Unsetenv("HFCP_PROVIDER")
+	defer os.Unsetenv("HFCP_REGION")
+
+	viper.Reset()
+	InitViper()
+
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("provider", "", "provider")
+	cmd.Flags().String("region", "", "region")
+
+	// Bind flags to viper
+	err := BindCommandFlags(cmd)
+	require.NoError(t, err)
+
+	// Don't set the flags - they should come from env vars
+	flags := &Flags{}
+
+	BindFlagsToViper(cmd, flags)
+
+	// Environment variables should be used when flags are not set
+	assert.Equal(t, "from-env", flags.ProviderName, "Env var should be used when flag not set")
+	assert.Equal(t, "us-west1", flags.Region, "Env var should be used when flag not set")
+}
+
+func TestBindFlagsToViper_MixedFlagAndEnv(t *testing.T) {
+	// Test mixed scenario: some flags set, some from env
+	savedEnvVars := clearHFCPEnvVars()
+	defer restoreEnvVars(savedEnvVars)
+
+	viper.Reset()
+	InitViper()
+
+	// Set environment variables
+	os.Setenv("HFCP_PROVIDER", "from-env")
+	os.Setenv("HFCP_REGION", "from-env-region")
+	defer os.Unsetenv("HFCP_PROVIDER")
+	defer os.Unsetenv("HFCP_REGION")
+
+	viper.Reset()
+	InitViper()
+
+	// Create a test command
+	cmd := &cobra.Command{Use: "test"}
+	cmd.Flags().String("provider", "", "provider")
+	cmd.Flags().String("region", "", "region")
+
+	// Only set provider flag, not region
+	err := cmd.Flags().Set("provider", "from-flag")
+	require.NoError(t, err)
+
+	// Bind flags to viper
+	err = BindCommandFlags(cmd)
+	require.NoError(t, err)
+
+	flags := &Flags{
+		ProviderName: "from-flag", // Set by flag
+	}
+
+	BindFlagsToViper(cmd, flags)
+
+	// Provider should use flag value, region should use env var
+	assert.Equal(t, "from-flag", flags.ProviderName, "Flag should take precedence")
+	assert.Equal(t, "from-env-region", flags.Region, "Env var should be used when flag not set")
 }
