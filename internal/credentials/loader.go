@@ -43,7 +43,7 @@ func (l *DefaultLoader) LoadGCP(ctx context.Context, path string) (*GCPCredentia
 			return nil, errors.New(
 				errors.ErrCredentialNotFound,
 				"GCP credentials file path not provided",
-			).WithDetail("set GOOGLE_APPLICATION_CREDENTIALS environment variable or use --credentials-file flag")
+			).WithDetail("set GOOGLE_APPLICATION_CREDENTIALS environment variable")
 		}
 	}
 
