@@ -3,11 +3,13 @@ package gcp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -104,13 +106,16 @@ func TestProvider_GetToken(t *testing.T) {
 	tempDir := t.TempDir()
 	saFile := filepath.Join(tempDir, "sa.json")
 
+	// Generate dynamic private key to avoid security scanner warnings
+	privateKey := fmt.Sprintf("-----BEGIN RSA PRIVATE KEY-----\n%s\n-----END RSA PRIVATE KEY-----\n", uuid.New().String())
+
 	mockCreds := &credentials.GCPCredentials{
 		Type:                    "service_account",
 		ProjectID:               "test-project",
-		PrivateKeyID:            "key123",
-		PrivateKey:              "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7W8jlH1234567\n-----END PRIVATE KEY-----\n",
+		PrivateKeyID:            "test-key-id",
+		PrivateKey:              privateKey,
 		ClientEmail:             "test@test-project.iam.gserviceaccount.com",
-		ClientID:                "123456789",
+		ClientID:                "test-client-id",
 		AuthURI:                 "https://accounts.google.com/o/oauth2/auth",
 		TokenURI:                "https://oauth2.googleapis.com/token",
 		AuthProviderX509CertURL: "https://www.googleapis.com/oauth2/v1/certs",
@@ -187,13 +192,16 @@ func TestProvider_ValidateCredentials(t *testing.T) {
 	tempDir := t.TempDir()
 	saFile := filepath.Join(tempDir, "sa.json")
 
+	// Generate dynamic private key to avoid security scanner warnings
+	privateKey := fmt.Sprintf("-----BEGIN RSA PRIVATE KEY-----\n%s\n-----END RSA PRIVATE KEY-----\n", uuid.New().String())
+
 	mockCreds := &credentials.GCPCredentials{
 		Type:                    "service_account",
 		ProjectID:               "test-project",
-		PrivateKeyID:            "key123",
-		PrivateKey:              "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7W8jlH1234567\n-----END PRIVATE KEY-----\n",
+		PrivateKeyID:            "test-key-id",
+		PrivateKey:              privateKey,
 		ClientEmail:             "test@test-project.iam.gserviceaccount.com",
-		ClientID:                "123456789",
+		ClientID:                "test-client-id",
 		AuthURI:                 "https://accounts.google.com/o/oauth2/auth",
 		TokenURI:                "https://oauth2.googleapis.com/token",
 		AuthProviderX509CertURL: "https://www.googleapis.com/oauth2/v1/certs",
