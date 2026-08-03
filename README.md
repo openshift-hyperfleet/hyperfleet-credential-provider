@@ -383,7 +383,7 @@ podman run --rm \
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.26+
 - Podman or Docker
 - Make
 

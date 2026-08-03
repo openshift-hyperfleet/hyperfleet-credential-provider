@@ -1,9 +1,9 @@
 .DEFAULT_GOAL := help
 
-include .bingo/Variables.mk
-
 CGO_ENABLED ?= 0
 GO ?= go
+TOOL_MOD := tools/go.mod
+gotool = $(GO) tool -modfile=$(TOOL_MOD) $(1)
 
 BINARY_NAME := hyperfleet-credential-provider
 BUILD_DIR := bin
@@ -65,10 +65,18 @@ coverage: test
 	@echo "Coverage report: coverage.html"
 .PHONY: coverage
 
-lint: $(GOLANGCI_LINT)
+lint:
 	@echo "Running golangci-lint..."
-	GOLANGCI_LINT_CACHE=$${HOME}/.cache/golangci-lint GOCACHE=$${HOME}/.cache/go-build GOMODCACHE=$${HOME}/go/pkg/mod $(GOLANGCI_LINT) run
+	GOLANGCI_LINT_CACHE=$${HOME}/.cache/golangci-lint GOCACHE=$${HOME}/.cache/go-build GOMODCACHE=$${HOME}/go/pkg/mod $(call gotool,golangci-lint) run ./...
 .PHONY: lint
+
+.PHONY: tools
+tools: ## Ensure tool dependencies are up to date
+	cd tools && GOWORK=off $(GO) mod tidy
+
+.PHONY: verify-tools
+verify-tools: tools ## Fail in CI if tool module drifted
+	@git diff --exit-code tools/go.mod tools/go.sum || (echo "tool modules out of date; run 'make tools'" && exit 1)
 
 fmt:
 	@echo "Formatting code..."
@@ -140,3 +148,4 @@ scan:
 	@which govulncheck > /dev/null || $(GO) install golang.org/x/vuln/cmd/govulncheck@latest
 	govulncheck ./...
 .PHONY: scan
+
