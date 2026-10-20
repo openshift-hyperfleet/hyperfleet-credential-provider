@@ -88,6 +88,16 @@ vet:
 	$(GO) vet ./...
 .PHONY: vet
 
+gofmt: fmt ## Alias for fmt (used by the hyperfleet-gofmt pre-commit hook)
+.PHONY: gofmt
+
+go-vet: vet ## Alias for vet (used by the hyperfleet-go-vet pre-commit hook)
+.PHONY: go-vet
+
+install-hooks:
+	pre-commit install
+.PHONY: install-hooks
+
 clean:
 	@echo "Cleaning..."
 	@rm -rf $(BUILD_DIR) coverage.out coverage.html
@@ -148,4 +158,3 @@ scan:
 	@which govulncheck > /dev/null || $(GO) install golang.org/x/vuln/cmd/govulncheck@latest
 	govulncheck ./...
 .PHONY: scan
-

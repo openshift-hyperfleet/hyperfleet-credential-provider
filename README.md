@@ -386,10 +386,14 @@ podman run --rm \
 - Go 1.26+
 - Podman or Docker
 - Make
+- [pre-commit](https://pre-commit.com/#install)
 
 ### Building
 
 ```bash
+# One-time: install the git hooks (secret scanning, commitlint, linting, file hygiene)
+make install-hooks
+
 # Build binary
 make build
 
