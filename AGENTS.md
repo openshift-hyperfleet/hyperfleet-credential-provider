@@ -43,7 +43,7 @@ Use a Go toolchain compatible with `go.mod` and the linter pinned in `tools/go.m
 | `make vet` | Run `go vet ./...` |
 | `make lint` | Run the pinned golangci-lint |
 | `make fmt` | Format Go sources; inspect resulting changes |
-| `go test -v -tags=e2e ./test/e2e` | CLI suite; build the binary first with `make build` |
+| `go test -v -count=1 -tags=e2e -timeout=3m ./test/e2e` | CLI suite without test caching; build the binary first with `make build` |
 | `make test-integration` | Cloud integration suite with a 30-minute timeout; requires explicit test configuration |
 | `make image-test` | Build the Linux/amd64 image, then run its `version` command using Podman |
 | `make image-test container_tool=docker` | Same image smoke test using Docker |
