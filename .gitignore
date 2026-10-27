@@ -37,6 +37,7 @@ go.work.sum
 
 # Credentials (never commit these)
 *.json
+!/renovate.json
 !testdata/*.json
 !test/testdata/*.json
 *-sa.json
