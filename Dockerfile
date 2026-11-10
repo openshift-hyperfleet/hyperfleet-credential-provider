@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal:latest
 
-FROM golang:1.26.0 AS builder
+FROM golang:1.26.11 AS builder
 
 ARG GIT_SHA=unknown
 ARG GIT_DIRTY=""
