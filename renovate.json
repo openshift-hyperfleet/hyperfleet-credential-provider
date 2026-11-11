@@ -1,8 +1,5 @@
 {
   "extends": [
     "github>openshift-hyperfleet/renovate-config"
-  ],
-  "schedule": [
-    "at any time"
   ]
 }
